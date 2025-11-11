@@ -10,10 +10,10 @@ variables:
 
 stages:
 
-- stage: BootstrapBackend
-  displayName: 'Bootstrap: ensure GCS backend bucket exists'
+- stage: Backend_bucket_check
+  displayName: 'Backet: ensure GCS backend bucket exists'
   jobs:
-  - job: Bootstrap
+  - job: Backent_check
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -95,8 +95,7 @@ stages:
 
 
 - stage: TerraformApply
-  displayName: 'Terraform Apply (modules)'
-  # dependsOn: ManualApproval
+  displayName: 'Terraform Apply or destroy (modules)'
   jobs:
   - job: Apply
     pool:
@@ -114,7 +113,7 @@ stages:
         path: $(Build.SourcesDirectory)/$(TERRAFORM_WORKING_DIR)
 
     - task: Bash@3
-      displayName: 'Install Terraform (if missing)'
+      displayName: 'Install Terraform '
       inputs:
         targetType: 'inline'
         script: |
@@ -126,7 +125,7 @@ stages:
           terraform version
 
     - task: Bash@3
-      displayName: 'Terraform init & apply (use binary plan)'
+      displayName: 'Terraform init & apply or destroy'
       env:
         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
       inputs:
@@ -137,10 +136,10 @@ stages:
           export TF_VAR_project_id=$(PROJECT_ID)
           export TF_VAR_region=$(LOCATION)
           terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
-          # apply saved binary plan
+
           if [ -f tfplan.binary ]; then
-            terraform apply -input=false -auto-approve tfplan.binary
+            terraform $(COMMAND) -input=false -auto-approve tfplan.binary
           else
             echo "tfplan.binary missing — running interactive apply (should not happen in CI)."
-            terraform apply -input=false -auto-approve
+            terraform $(COMMAND) -input=false -auto-approve
           fi
