@@ -19,5 +19,5 @@ variable "gke_node_count" {
 
 variable "gke_machine_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-micro"
 }
