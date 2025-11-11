@@ -103,15 +103,15 @@ stages:
   displayName: 'Manual Approval Gate'
   dependsOn: TerraformPlan
   jobs:
-  - job: Approve
-    pool:
-      vmImage: 'ubuntu-latest'
+  - job: manual_approval
+    displayName: "Manual Approval"
+    dependsOn: terraform_init
+    pool: server
     steps:
     - task: ManualValidation@0
+      timeoutInMinutes: 5
       inputs:
-        notifyUsers: ''   # put approver(s) UPNs if needed
-        instructions: 'Review plan artifact and approve to run apply.'
-        onTimeout: 'reject'
+        instructions: "Hi, please validate"
 
 - stage: TerraformApply
   displayName: 'Terraform Apply (modules)'
