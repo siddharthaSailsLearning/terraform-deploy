@@ -40,7 +40,7 @@ stages:
           gcloud --quiet version || true
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
           gcloud config set project $(PROJECT_ID)
-          # create bucket if missing
+
           if ! gsutil ls -b gs://$(GCS_BACKEND_BUCKET) >/dev/null 2>&1; then
             echo "Creating bucket: $(GCS_BACKEND_BUCKET)"
             gsutil mb -p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)
