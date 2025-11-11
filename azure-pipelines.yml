@@ -99,23 +99,23 @@ stages:
     - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
       artifact: tfplan_txt
 
-- stage: ManualApproval
-  displayName: 'Manual Approval Gate'
-  dependsOn: TerraformPlan
-  jobs:
-  - job: manual_approval
-    displayName: "Manual Approval"
-    dependsOn: terraform_init
-    pool: server
-    steps:
-    - task: ManualValidation@0
-      timeoutInMinutes: 5
-      inputs:
-        instructions: "Hi, please validate"
+# - stage: ManualApproval
+#   displayName: 'Manual Approval Gate'
+#   dependsOn: TerraformPlan
+#   jobs:
+#   - job: manual_approval
+#     displayName: "Manual Approval"
+#     dependsOn: terraform_init
+#     pool: server
+#     steps:
+#     - task: ManualValidation@0
+#       timeoutInMinutes: 5
+#       inputs:
+#         instructions: "Hi, please validate"
 
 - stage: TerraformApply
   displayName: 'Terraform Apply (modules)'
-  dependsOn: ManualApproval
+  # dependsOn: ManualApproval
   jobs:
   - job: Apply
     pool:
