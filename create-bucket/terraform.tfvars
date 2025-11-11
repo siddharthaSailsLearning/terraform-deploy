@@ -1,0 +1,5 @@
+project_id       = "fluted-factor-438905-d2"
+bucket_name      = "pipeline-tfstate-bucket-for-infra-mgmt"
+prefix           = "terraform/state"
+credentials_path = "D:/service-acc-cred.json.json"
+region           = "us-central1"
