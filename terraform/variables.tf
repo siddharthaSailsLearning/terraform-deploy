@@ -14,7 +14,7 @@ variable "cluster_name" {
 
 variable "gke_node_count" {
   type    = number
-  default = 3
+  default = 1
 }
 
 variable "gke_machine_type" {
