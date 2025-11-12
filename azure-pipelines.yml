@@ -261,6 +261,7 @@ stages:
       inputs:
         provider: 'gcp'
         command: 'apply'
+        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
         commandOptions: '-input=false -auto-approve tfplan.binary'
         environmentServiceNameGCP: 'GCP-tf-service-acc'
 
