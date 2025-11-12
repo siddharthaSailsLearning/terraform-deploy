@@ -153,10 +153,11 @@ variables:
 
 stages:
 
-- stage: Terraform_plan_and_apply
-  displayName: 'Backet: ensure GCS backend bucket exists'
+- stage: Terraform_plan
+  displayName: 'Plan: ensure GCS backend bucket exists and create tf plan'
   jobs:
-  - job: Backent_check
+  - job: plan
+    displayName: 'Plan job'
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -166,49 +167,55 @@ stages:
         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
 
     - task: GoogleCloudSdkInstaller@0
+      displayName: 'Install Google Cloud SDK'
       inputs:
-        version: '306.0.0
+        version: '306.0.0'
 
 
     - task: Bash@3
-      displayName: 'Configure GCP crediantails'
+      displayName: 'Authenticate gcloud with service account'
       env:
         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
       inputs:
         targetType: 'inline'
         script: |
           set -euo pipefail
-          echo "PATH: $PATH"
-          echo "Creds file: $GOOGLE_APPLICATION_CREDENTIALS"
-
-
-    
-    - task: GcloudRunner@0
-      inputs:
-        command: 'gcloud auth activate-service-account'
-        arguments: '--key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"'
-        # arguments: 'YOUR_SERVICE_ACCOUNT_EMAIL --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)'
-
-    - task: GcloudRunner@0
-      inputs:
-        command: 'gcloud config set project'
-        arguments: '$(PROJECT_ID)'
+          echo "Using creds: $GOOGLE_APPLICATION_CREDENTIALS"
+          gcloud --quiet auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          gcloud config set project $(PROJECT_ID)
+          gcloud --quiet config set compute/region $(LOCATION) || true
+  
 
     - task: Bash@3
-      displayName: 'Configure GAR'
+      displayName: 'Ensure GCS backend bucket exists (idempotent)'
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
       inputs:
         targetType: 'inline'
         script: |
-
+          set -euo pipefail
           if ! gsutil ls -b gs://$(GCS_BACKEND_BUCKET) >/dev/null 2>&1; then
             echo "Creating bucket: $(GCS_BACKEND_BUCKET)"
             gsutil mb -p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)
             gsutil versioning set on gs://$(GCS_BACKEND_BUCKET)
             echo "Bucket created and versioning enabled."
           else
-            echo "Bucket exists; setting versioning on (idempotent)."
+            echo "Bucket exists; ensuring versioning on (idempotent)."
             gsutil versioning set on gs://$(GCS_BACKEND_BUCKET) || true
           fi
+
+    # - task: Bash@3
+    #   displayName: 'Install Terraform (CLI)'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       set -euo pipefail
+    #       if ! command -v terraform >/dev/null 2>&1; then
+    #         wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip
+    #         unzip -o /tmp/terraform.zip -d /usr/local/bin
+    #       fi
+    #       terraform version
+
 
     - task: TerraformInstaller@1
       inputs:
