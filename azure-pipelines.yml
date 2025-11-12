@@ -169,7 +169,7 @@ stages:
     - task: GoogleCloudSdkInstaller@0
       displayName: 'Install Google Cloud SDK'
       inputs:
-        version: 'latest'
+        version: '457.0.0'
 
     - task: Bash@3
       displayName: 'Authenticate gcloud with service account'
