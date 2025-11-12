@@ -249,13 +249,13 @@ stages:
     - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
       artifact: tfplan_txt
 
-    # - task: TerraformTask@5
-    #   inputs:
-    #     provider: 'gcp'
-    #     command: 'init'
-    #     backendServiceGCP: 'GCP-tf-service-acc'
-    #     backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
-    #     backendGCPPrefix: '$(BUCKET_PREFIX)'
+    - task: TerraformTask@5
+      inputs:
+        provider: 'gcp'
+        command: 'init'
+        backendServiceGCP: 'GCP-tf-service-acc'
+        backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
+        backendGCPPrefix: '$(BUCKET_PREFIX)'
 
     - task: TerraformTask@5
       inputs:
