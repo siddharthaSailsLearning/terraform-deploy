@@ -166,11 +166,10 @@ stages:
       inputs:
         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
 
-    - task: GoogleCloudSdkTool@1
+    - task: GoogleCloudSdkInstaller@0
+      displayName: 'Install Google Cloud SDK'
       inputs:
-        versionSpec: '315.x'
-        checkLatest: true
-
+        version: '306.0.0'
 
     - task: Bash@3
       displayName: 'Authenticate gcloud with service account'
