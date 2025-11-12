@@ -217,6 +217,7 @@ stages:
 
 
     - task: TerraformInstaller@1
+      displayName: 'Inastalling terraform"
       inputs:
         terraformVersion: 'latest'
 
@@ -246,10 +247,12 @@ stages:
           
 
     - task: TerraformTask@5
+      displayName: 'validate terraform"
       inputs:
         provider: 'gcp'
         command: 'validate'
     - task: TerraformTask@5
+      displayName: 'initiate terraform"
       inputs:
         provider: 'gcp'
         command: 'init'
@@ -258,6 +261,7 @@ stages:
         backendGCPPrefix: '$(BUCKET_PREFIX)'
 
     - task: TerraformTask@5
+      displayName: 'planning terraform"
       inputs:
         provider: 'gcp'
         command: 'plan'
@@ -265,6 +269,7 @@ stages:
         environmentServiceNameGCP: 'GCP-tf-service-acc'
 
     - task: TerraformTask@5
+      displayName: 'getting tfplan terraform"
       inputs:
         provider: 'gcp'
         command: 'show'
