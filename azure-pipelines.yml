@@ -245,38 +245,38 @@ stages:
           terraform show -no-color tfplan.binary > tfplan.txt
           
 
-    - task: TerraformTask@5
-      displayName: 'validate terraform"
-      inputs:
-        provider: 'gcp'
-        command: 'validate'
-    - task: TerraformTask@5
-      displayName: 'initiate terraform"
-      inputs:
-        provider: 'gcp'
-        command: 'init'
-        backendServiceGCP: 'GCP-tf-service-acc'
-        backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
-        backendGCPPrefix: '$(BUCKET_PREFIX)'
+    # - task: TerraformTask@5
+    #   displayName: 'validate terraform"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'validate'
+    # - task: TerraformTask@5
+    #   displayName: 'initiate terraform"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'init'
+    #     backendServiceGCP: 'GCP-tf-service-acc'
+    #     backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
+    #     backendGCPPrefix: '$(BUCKET_PREFIX)'
 
-    - task: TerraformTask@5
-      displayName: 'planning terraform"
-      inputs:
-        provider: 'gcp'
-        command: 'plan'
-        commandOptions: '-out=tfplan.binary -input=false'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
+    # - task: TerraformTask@5
+    #   displayName: 'planning terraform"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'plan'
+    #     commandOptions: '-out=tfplan.binary -input=false'
+    #     environmentServiceNameGCP: 'GCP-tf-service-acc'
 
-    - task: TerraformTask@5
-      displayName: 'getting tfplan terraform"
-      inputs:
-        provider: 'gcp'
-        command: 'show'
-        commandOptions: '-no-color'
-        outputTo: 'file'
-        outputFormat: 'default'
-        fileName: 'tfplan.txt'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
+    # - task: TerraformTask@5
+    #   displayName: 'getting tfplan terraform"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'show'
+    #     commandOptions: '-no-color'
+    #     outputTo: 'file'
+    #     outputFormat: 'default'
+    #     fileName: 'tfplan.txt'
+    #     environmentServiceNameGCP: 'GCP-tf-service-acc'
     
     - publish: $(TERRAFORM_WORKING_DIR)/tfplan.binary
       artifact: tfplan
