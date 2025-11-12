@@ -245,10 +245,10 @@ stages:
           terraform show -no-color tfplan.binary > tfplan.txt
           terraform apply -input=false -auto-approve tfplan.binary
               
-    - publish: $(TERRAFORM_WORKING_DIR)/tfplan.binary
-      artifact: tfplan
-    - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
-      artifact: tfplan_txt
+    # - publish: $(TERRAFORM_WORKING_DIR)/tfplan.binary
+    #   artifact: tfplan
+    # - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
+    #   artifact: tfplan_txt
 
     # - task: TerraformTask@5
     #   inputs:
