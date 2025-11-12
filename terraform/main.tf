@@ -4,6 +4,14 @@ provider "google" {
   # When running in CI we use GOOGLE_APPLICATION_CREDENTIALS env var
 }
 
+terraform {
+  backend "gcs" {
+    bucket  = "pipeline-tfstate-bucket-for-infra-mgmt"
+    prefix  = "terraform/state"
+  }
+}
+
+
 provider "google-beta" {
   project = var.project_id
   region  = var.region
