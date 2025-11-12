@@ -262,18 +262,7 @@ stages:
         provider: 'gcp'
         command: 'apply'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        commandOptions: '-input=false -auto-approve tfplan.binary'
+        commandOptions: '--auto-approve'
         environmentServiceNameGCP: 'GCP-tf-service-acc'
 
-    # - task: DownloadPipelineArtifact@2
-    #   displayName: 'Download plan artifact'
-    #   inputs:
-    #     artifact: tfplan
-    #     path: $(Build.SourcesDirectory)/$(TERRAFORM_WORKING_DIR)
-
-    # - task: TerraformTask@5
-    #   inputs:
-    #     provider: 'gcp'
-    #     command: 'apply'
-    #     commandOptions: '-input=false -auto-approve tfplan.binary'
-    #     environmentServiceNameGCP: 'GCP-tf-service-acc'
+  
