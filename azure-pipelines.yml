@@ -153,7 +153,7 @@ variables:
 
 stages:
 
-- stage: Terraform plan and apply
+- stage: Terraform_plan_and_apply
   displayName: 'Backet: ensure GCS backend bucket exists'
   jobs:
   - job: Backent_check
