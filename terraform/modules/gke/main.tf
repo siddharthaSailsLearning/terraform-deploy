@@ -3,7 +3,7 @@ resource "google_container_cluster" "primary" {
   location = var.region
 
   initial_node_count = var.node_count
-
+  deletion_protection = false
   node_config {
     machine_type    = var.machine_type
     service_account = var.service_account_email
@@ -22,7 +22,6 @@ resource "google_container_node_pool" "primary_nodes" {
   name       = "${var.cluster_name}-pool"
   cluster    = google_container_cluster.primary.name
   location   = var.region
-
   node_config {
     machine_type = var.machine_type
     service_account = var.service_account_email
