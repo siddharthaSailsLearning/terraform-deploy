@@ -143,6 +143,8 @@
 #             echo "tfplan.binary missing — running interactive apply (should not happen in CI)."
 #             terraform $(COMMAND) -input=false -auto-approve
 #           fi
+#----------------------------------------------------- second method ------------------
+
 trigger:
   branches:
     include:
