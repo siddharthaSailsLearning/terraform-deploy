@@ -21,3 +21,7 @@ variable "gke_machine_type" {
   type    = string
   default = "e2-micro"
 }
+
+variable "service_ACC" {
+  type=string
+}

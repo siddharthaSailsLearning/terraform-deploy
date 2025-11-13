@@ -16,6 +16,7 @@ provider "google-beta" {
 module "iam" {
   source = "./modules/iam"
   project_id = var.project_id
+  service_ACC = var.service_ACC
 }
 
 # Artifact Registry
