@@ -1,3 +1,3 @@
 output "service_account_email" {
-  value = google_service_account.deployer.email
+  value = var.service_ACC
 }
