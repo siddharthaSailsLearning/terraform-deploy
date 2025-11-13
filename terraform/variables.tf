@@ -25,3 +25,4 @@ variable "gke_machine_type" {
 variable "service_ACC" {
   type=string
 }
+variable "reg" { type = string }

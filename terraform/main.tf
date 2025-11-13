@@ -23,7 +23,8 @@ module "iam" {
 module "gar" {
   source = "./modules/gar"
   project_id = var.project_id
-  region     = var.region
+  region     = var.reg
+  reg = var.reg
   repository_id = "my-docker-repo"
 }
 
