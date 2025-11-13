@@ -240,8 +240,8 @@ stages:
           export TF_VAR_project_id="$PROJECT_ID"
           export TF_VAR_region="$LOCATION"
           terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
-          terraform import 'module.gar.google_artifact_registry_repository.docker_repo' 'projects/fluted-factor-438905-d2/locations/us-central1/repositories/docker_repo'
-          terraform import 'module.iam.google_service_account.deployer' 'projects/fluted-factor-438905-d2/serviceAccounts/deployer-sa@fluted-factor-438905-d2.iam.gserviceaccount.com'
+          # terraform import 'module.gar.google_artifact_registry_repository.my-docker-repo' 'projects/fluted-factor-438905-d2/locations/us-central1/repositories/my-docker-repo'
+          # terraform import 'module.iam.google_service_account.deployer' 'projects/fluted-factor-438905-d2/serviceAccounts/deployer-sa@fluted-factor-438905-d2.iam.gserviceaccount.com'
           terraform validate
           terraform plan -out=tfplan.binary -input=false
           terraform show -no-color tfplan.binary > tfplan.txt

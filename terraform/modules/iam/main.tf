@@ -1,7 +1,7 @@
-resource "google_service_account" "deployer" {
-  account_id   = "deployer-sa"
-  display_name = "Deployer service account for GKE & Artifact Registry"
-}
+# resource "google_service_account" "deployer" {
+#   account_id   = "deployer-sa"
+#   display_name = "Deployer service account for GKE & Artifact Registry"
+# }
 
 # Bindings: least-privilege set for common operations.
 resource "google_project_iam_member" "container_admin" {

@@ -1,4 +1,4 @@
-resource "google_artifact_registry_repository" "docker_repo" {
+resource "google_artifact_registry_repository" "my-docker-repo" {
   provider      = google-beta
   project       = var.project_id
   location      = var.region
