@@ -239,6 +239,7 @@ stages:
           cd "$TERRAFORM_WORKING_DIR"
           export TF_VAR_project_id="$PROJECT_ID"
           export TF_VAR_region="$LOCATION"
+          export TF_VAR_service_ACC="$SERVICE_ACC_EMAIL"
           terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
           # terraform import 'module.gar.google_artifact_registry_repository.my-docker-repo' 'projects/fluted-factor-438905-d2/locations/us-central1/repositories/my-docker-repo'
           # terraform import 'module.iam.google_service_account.deployer' 'projects/fluted-factor-438905-d2/serviceAccounts/deployer-sa@fluted-factor-438905-d2.iam.gserviceaccount.com'

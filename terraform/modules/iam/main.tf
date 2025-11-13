@@ -7,18 +7,18 @@
 resource "google_project_iam_member" "container_admin" {
   project = var.project_id
   role    = "roles/container.admin"
-  member  = "serviceAccount:${google_service_account.deployer.email}"
+  member  = "serviceAccount:${var.service_ACC}"
 }
 
 resource "google_project_iam_member" "artifact_registry_admin" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${google_service_account.deployer.email}"
+  member  = "serviceAccount:${var.service_ACC}"
 }
 
 # If needed: grant storage permissions for pushing images to older registries
 resource "google_project_iam_member" "storage_admin_for_images" {
   project = var.project_id
   role    = "roles/storage.admin"
-  member  = "serviceAccount:${google_service_account.deployer.email}"
+  member  = "serviceAccount:${var.service_ACC}"
 }
