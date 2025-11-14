@@ -250,18 +250,27 @@ stages:
           # terraform destroy -input=false -auto-approve
 
 
-    - task: TerraformTask@5
-      name: TFInit
-      displayName: "Terraform Init with GCS Backend"
-      inputs:
-        provider: 'gcp'
-        command: 'init'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        backendServiceGCP: 'GCP-tf-service-acc'
-        backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
-        backendGCPPrefix: '$(BUCKET_PREFIX)'
-        additionalArgs: '-migrate-state'
-        commandOptions: ''   
+    # - task: TerraformTask@5
+    #   name: TFInit
+    #   displayName: "Terraform Init with GCS Backend"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'init'
+    #     workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+    #     backendServiceGCP: 'GCP-tf-service-acc'
+    #     backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
+    #     backendGCPPrefix: '$(BUCKET_PREFIX)'
+    #     additionalArgs: '-migrate-state'
+    #     commandOptions: ''   
+
+    - script: |
+        echo "Initializing Terraform with GCS backend..."
+        terraform init -reconfigure \
+          -backend-config=bucket=$(GCS_BACKEND_BUCKET) \
+          -backend-config=prefix=$(BUCKET_PREFIX) \
+          -backend-config=credentials=$(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
+      displayName: 'Terraform Init'
+      workingDirectory: '$(TERRAFORM_WORKING_DIR)'
 
 
     - task: TerraformTask@5
