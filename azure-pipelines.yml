@@ -240,14 +240,14 @@ stages:
           export TF_VAR_service_ACC="$SERVICE_ACC_EMAIL"
 
 
+          terraform init -reconfigure
 
 
-
-          terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
-          terraform validate
-          terraform plan -out=tfplan.binary -input=false
-          terraform show -no-color tfplan.binary > tfplan.txt
-          terraform destroy -input=false -auto-approve
+          # terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
+          # terraform validate
+          # terraform plan -out=tfplan.binary -input=false
+          # terraform show -no-color tfplan.binary > tfplan.txt
+          # terraform destroy -input=false -auto-approve
 
 
     - task: TerraformTask@5
