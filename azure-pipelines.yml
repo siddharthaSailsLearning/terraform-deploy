@@ -240,7 +240,7 @@ stages:
           export TF_VAR_service_ACC="$SERVICE_ACC_EMAIL"
 
 
-          terraform init -reconfigure
+          # terraform init -reconfigure
 
 
           # terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
@@ -260,7 +260,7 @@ stages:
         backendServiceGCP: 'GCP-tf-service-acc'
         backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
         backendGCPPrefix: '$(BUCKET_PREFIX)'
-        additionalArgs: '-reconfigure'
+        additionalArgs: '-migrate-state'
         commandOptions: ''   
 
 
