@@ -250,19 +250,6 @@ stages:
           # terraform destroy -input=false -auto-approve
 
 
-    # - task: TerraformTask@5
-    #   name: TFInit
-    #   displayName: "Terraform Init with GCS Backend"
-    #   inputs:
-    #     provider: 'gcp'
-    #     command: 'init'
-    #     workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-    #     backendServiceGCP: 'GCP-tf-service-acc'
-    #     backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
-    #     backendGCPPrefix: '$(BUCKET_PREFIX)'
-    #     additionalArgs: '-migrate-state'
-    #     commandOptions: ''   
-
     - script: |
         echo "Initializing Terraform with GCS backend..."
         terraform init -migrate-state \
@@ -289,7 +276,13 @@ stages:
         command: 'plan'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
         environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: '-out=tfplan.binary -input=false'
+        commandOptions: >
+          -out=tfplan.binary 
+          -input=false
+          -var=project_id='$(PROJECT_ID)'
+          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+          -var=reg='$(REGION)'
+          -var=region="$(LOCATION)"
 
 
     - task: TerraformTask@5
@@ -309,4 +302,5 @@ stages:
         provider: 'gcp'
         command: 'destroy'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+        environmentServiceNameGCP: 'GCP-tf-service-acc'
         commandOptions: '-auto-approve -input=false'
