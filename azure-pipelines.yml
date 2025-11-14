@@ -288,6 +288,7 @@ stages:
         provider: 'gcp'
         command: 'plan'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+        environmentServiceNameGCP: 'GCP-tf-service-acc'
         commandOptions: '-out=tfplan.binary -input=false'
 
 
