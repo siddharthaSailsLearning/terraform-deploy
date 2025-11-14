@@ -152,7 +152,8 @@ trigger:
 
 variables:
   - group: terraform-deploy
-  - TF_WORK_DIR: $(TERRAFORM_WORKING_DIR)
+  - name: "TF_WORK_DIR"
+    value : $(TERRAFORM_WORKING_DIR)
 
 stages:
 
