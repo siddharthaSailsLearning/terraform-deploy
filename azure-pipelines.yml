@@ -265,7 +265,7 @@ stages:
 
     - script: |
         echo "Initializing Terraform with GCS backend..."
-        terraform init -reconfigure \
+        terraform init -migrate-state \
           -backend-config=bucket=$(GCS_BACKEND_BUCKET) \
           -backend-config=prefix=$(BUCKET_PREFIX) \
           -backend-config=credentials=$(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
@@ -298,6 +298,7 @@ stages:
         provider: 'gcp'
         command: 'show'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+        environmentServiceNameGCP: 'GCP-tf-service-acc'
         commandOptions: 'tfplan.binary -no-color > tfplan.txt'
 
     - task: TerraformTask@5
