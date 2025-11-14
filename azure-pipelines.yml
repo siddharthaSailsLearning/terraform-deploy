@@ -285,22 +285,33 @@ stages:
           -var=region="$(LOCATION)"
 
 
-    - task: TerraformTask@5
-      name: TFShow
-      displayName: "Terraform Show (export plan text)"
-      inputs:
-        provider: 'gcp'
-        command: 'show'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: 'tfplan.binary -no-color > tfplan.txt'
+    # - task: TerraformTask@5
+    #   name: TFShow
+    #   displayName: "Terraform Show (export plan text)"
+    #   inputs:
+    #     provider: 'gcp'
+    #     command: 'show'
+    #     workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+    #     environmentServiceNameGCP: 'GCP-tf-service-acc'
+    #     commandOptions: 'tfplan.binary -no-color > tfplan.txt'
+
+    - script: |
+        terraform show -no-color tfplan.binary > tfplan.txt
+        cat tfplan.txt
+      displayName: 'Terraform Show → tfplan.txt'
+      workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+
+    - publish: '$(TERRAFORM_WORKING_DIR)/tfplan.txt'
+      artifact: terraform-plan-text
+
+
 
     - task: TerraformTask@5
-      name: TFDestroy
-      displayName: "Terraform Destroy"
+      name: TFApply
+      displayName: "Terraform Apply"
       inputs:
         provider: 'gcp'
-        command: 'destroy'
+        command: 'apply'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
         environmentServiceNameGCP: 'GCP-tf-service-acc'
         commandOptions: '-auto-approve -input=false'
