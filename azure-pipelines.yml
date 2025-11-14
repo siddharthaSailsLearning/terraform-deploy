@@ -260,6 +260,7 @@ stages:
         backendServiceGCP: 'GCP-tf-service-acc'
         backendGCPBucketName: '$(GCS_BACKEND_BUCKET)'
         backendGCPPrefix: '$(BUCKET_PREFIX)'
+        additionalArgs: '-reconfigure'
         commandOptions: ''   
 
 
