@@ -314,4 +314,10 @@ stages:
         command: 'apply'
         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
         environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: '-auto-approve -input=false'
+        commandOptions: >
+          -auto-approve 
+          -input=false
+          -var=project_id='$(PROJECT_ID)'
+          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+          -var=reg='$(REGION)'
+          -var=region="$(LOCATION)"
