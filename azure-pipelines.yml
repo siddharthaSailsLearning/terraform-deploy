@@ -205,7 +205,6 @@ stages:
         command: 'mb'
         arguments: '-p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)'
       condition: and(succeededOrFailed(), eq(dependencies.CheckBucket.result, 'Failed'))
-      dependsOn: CheckBucket
 
     - task: GsutilRunner@0
       name: EnableVersioning
