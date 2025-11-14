@@ -204,7 +204,8 @@ stages:
       inputs:
         command: 'mb'
         arguments: '-p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)'
-      condition: failed('CheckBucket')
+      condition: and(succeededOrFailed(), eq(dependencies.CheckBucket.result, 'Failed'))
+      dependsOn: CheckBucket
 
     - task: GsutilRunner@0
       name: EnableVersioning
@@ -212,7 +213,7 @@ stages:
       inputs:
         command: 'versioning'
         arguments: 'set on gs://$(GCS_BACKEND_BUCKET)'
-      condition: succeededOrFailed()
+      # condition: succeededOrFailed()
 
     # - task: Bash@3
     #   displayName: 'Ensure GCS backend bucket exists (idempotent)'
