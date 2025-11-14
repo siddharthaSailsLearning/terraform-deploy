@@ -219,37 +219,6 @@ stages:
         terraformVersion: 'latest'
 
 
-    - task: Bash@3
-      displayName: 'Terraform init & plan (writes plan file)'
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
-      inputs:
-        targetType: 'inline'
-        script: |
-          set -euo pipefail
-          export GCS_BACKEND_BUCKET="$(GCS_BACKEND_BUCKET)"
-          export BUCKET_PREFIX="$(BUCKET_PREFIX)"
-          export PROJECT_ID="$(PROJECT_ID)"
-          export LOCATION="$(LOCATION)"
-          export TERRAFORM_WORKING_DIR="$(TERRAFORM_WORKING_DIR)"
-
-          cd "$TERRAFORM_WORKING_DIR"
-          export TF_VAR_project_id="$PROJECT_ID"
-          export TF_VAR_region="$LOCATION"
-          export TF_VAR_reg="$REGION"
-          export TF_VAR_service_ACC="$SERVICE_ACC_EMAIL"
-
-
-          # terraform init -reconfigure
-
-
-          # terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
-          # terraform validate
-          # terraform plan -out=tfplan.binary -input=false
-          # terraform show -no-color tfplan.binary > tfplan.txt
-          # terraform destroy -input=false -auto-approve
-
-
     - script: |
         echo "Initializing Terraform with GCS backend..."
         terraform init -migrate-state \
@@ -284,17 +253,6 @@ stages:
           -var=reg='$(REGION)'
           -var=region="$(LOCATION)"
 
-
-    # - task: TerraformTask@5
-    #   name: TFShow
-    #   displayName: "Terraform Show (export plan text)"
-    #   inputs:
-    #     provider: 'gcp'
-    #     command: 'show'
-    #     workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-    #     environmentServiceNameGCP: 'GCP-tf-service-acc'
-    #     commandOptions: 'tfplan.binary -no-color > tfplan.txt'
-
     - script: |
         terraform show -no-color tfplan.binary > tfplan.txt
         cat tfplan.txt
@@ -321,3 +279,20 @@ stages:
           -var=service_ACC='$(SERVICE_ACC_EMAIL)'
           -var=reg='$(REGION)'
           -var=region="$(LOCATION)"
+
+    - task: TerraformTask@5
+      name: TFDestroy
+      displayName: "Terraform Destroy"
+      inputs:
+        provider: 'gcp'
+        command: 'destroy'
+        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+        environmentServiceNameGCP: 'GCP-tf-service-acc'
+        commandOptions: >
+          -auto-approve 
+          -input=false
+          -var=project_id='$(PROJECT_ID)'
+          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+          -var=reg='$(REGION)'
+          -var=region="$(LOCATION)"
+      condition: failed()
