@@ -81,6 +81,7 @@ stages:
           export TF_VAR_project_id="$PROJECT_ID"
           export TF_VAR_region="$LOCATION"
           export TF_VAR_reg="$LOCATION"
+          export TF_VAR_service_ACC="siddhu-service-account@fluted-factor-438905-d2.iam.gserviceaccount.com"
           
           echo "Backend bucket: $GCS_BACKEND_BUCKET"
           terraform init -backend-config="bucket=$GCS_BACKEND_BUCKET" -backend-config="prefix=$BUCKET_PREFIX"
