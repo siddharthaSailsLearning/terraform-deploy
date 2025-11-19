@@ -1,150 +1,3 @@
-# trigger:
-#   branches:
-#     include:
-#       - main
-
-# variables:
-#   - group: terraform-deploy
-#   # - name: name
-#   #   value: $(var)
-
-# stages:
-
-# - stage: Backend_bucket_check
-#   displayName: 'Backet: ensure GCS backend bucket exists'
-#   jobs:
-#   - job: Backent_check
-#     pool:
-#       vmImage: 'ubuntu-latest'
-#     steps:
-#     - task: DownloadSecureFile@1
-#       name: download_sa
-#       inputs:
-#         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
-
-#     - task: Bash@3
-#       displayName: 'Install gcloud (bare minimum) and create backend bucket idempotent'
-#       env:
-#         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           set -euo pipefail
-#           echo "PATH: $PATH"
-#           echo "Creds file: $GOOGLE_APPLICATION_CREDENTIALS"
-#           # Install gcloud non-interactively
-#           if ! command -v gcloud >/dev/null 2>&1; then
-#             curl -sSL https://sdk.cloud.google.com | bash >/dev/null 2>&1 || true
-#             export PATH="$HOME/google-cloud-sdk/bin:$PATH"
-#           fi
-#           gcloud --quiet version || true
-#           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
-#           gcloud config set project $(PROJECT_ID)
-
-#           if ! gsutil ls -b gs://$(GCS_BACKEND_BUCKET) >/dev/null 2>&1; then
-#             echo "Creating bucket: $(GCS_BACKEND_BUCKET)"
-#             gsutil mb -p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)
-#             gsutil versioning set on gs://$(GCS_BACKEND_BUCKET)
-#             echo "Bucket created and versioning enabled."
-#           else
-#             echo "Bucket exists; setting versioning on (idempotent)."
-#             gsutil versioning set on gs://$(GCS_BACKEND_BUCKET) || true
-#           fi
-
-#     - task: Bash@3
-#       displayName: 'Install Terraform'
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           set -euo pipefail
-#           if ! command -v terraform >/dev/null 2>&1; then
-#             wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip
-#             unzip -o /tmp/terraform.zip -d /usr/local/bin
-#           fi
-#           terraform version
-
-#     - task: Bash@3
-#       displayName: 'Terraform init & plan (writes plan file)'
-#       env:
-#         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           set -euo pipefail
-#           export GCS_BACKEND_BUCKET="$(GCS_BACKEND_BUCKET)"
-#           export BUCKET_PREFIX="$(BUCKET_PREFIX)"
-#           export PROJECT_ID="$(PROJECT_ID)"
-#           export LOCATION="$(LOCATION)"
-#           export TERRAFORM_WORKING_DIR="$(TERRAFORM_WORKING_DIR)"
-
-#           cd "$TERRAFORM_WORKING_DIR"
-#           export TF_VAR_project_id="$PROJECT_ID"
-#           export TF_VAR_region="$LOCATION"
-          
-#           echo "Backend bucket: $GCS_BACKEND_BUCKET"
-#           terraform init -backend-config="bucket=$GCS_BACKEND_BUCKET" -backend-config="prefix=$BUCKET_PREFIX"
-#           terraform validate
-#           terraform plan -out=tfplan.binary -input=false
-#           terraform show -no-color tfplan.binary > tfplan.txt
-#           echo "Plan written successfully."
-
-#     - publish: $(TERRAFORM_WORKING_DIR)/tfplan.binary
-#       artifact: tfplan
-#     - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
-#       artifact: tfplan_txt
-
-
-# - stage: TerraformApply
-#   displayName: 'Terraform Apply or destroy (modules)'
-#   jobs:
-#   - job: Apply
-#     pool:
-#       vmImage: 'ubuntu-latest'
-#     steps:
-#     - task: DownloadSecureFile@1
-#       name: download_sa_apply
-#       inputs:
-#         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
-
-#     - task: DownloadPipelineArtifact@2
-#       displayName: 'Download plan artifact'
-#       inputs:
-#         artifact: tfplan
-#         path: $(Build.SourcesDirectory)/$(TERRAFORM_WORKING_DIR)
-
-#     - task: Bash@3
-#       displayName: 'Install Terraform '
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           set -euo pipefail
-#           if ! command -v terraform >/dev/null 2>&1; then
-#             wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip
-#             unzip -o /tmp/terraform.zip -d /usr/local/bin
-#           fi
-#           terraform version
-
-#     - task: Bash@3
-#       displayName: 'Terraform init & apply or destroy'
-#       env:
-#         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           set -euo pipefail
-#           cd $(TERRAFORM_WORKING_DIR)
-#           export TF_VAR_project_id=$(PROJECT_ID)
-#           export TF_VAR_region=$(LOCATION)
-#           terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
-
-#           if [ -f tfplan.binary ]; then
-#             terraform $(COMMAND) -input=false -auto-approve tfplan.binary
-#           else
-#             echo "tfplan.binary missing — running interactive apply (should not happen in CI)."
-#             terraform $(COMMAND) -input=false -auto-approve
-#           fi
-#----------------------------------------------------- second method ------------------
-
 trigger:
   branches:
     include:
@@ -152,16 +5,15 @@ trigger:
 
 variables:
   - group: terraform-deploy
-  - name: "TF_WORK_DIR"
-    value : $(TERRAFORM_WORKING_DIR)
+  # - name: name
+  #   value: $(var)
 
 stages:
 
-- stage: Terraform_plan
-  displayName: 'Terraform Plan & Backend Setup'
+- stage: Backend_bucket_check
+  displayName: 'Backet: ensure GCS backend bucket exists'
   jobs:
-  - job: plan
-    displayName: 'Plan job'
+  - job: Backent_check
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -170,129 +22,280 @@ stages:
       inputs:
         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
 
-    - task: GoogleCloudSdkInstaller@0
-      displayName: 'Install Google Cloud SDK'
-      inputs:
-        version: '457.0.0'
-
     - task: Bash@3
-      displayName: 'Authenticate gcloud with service account'
+      displayName: 'Install gcloud (bare minimum) and create backend bucket idempotent'
       env:
         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
       inputs:
         targetType: 'inline'
         script: |
           set -euo pipefail
-          echo "Using creds: $GOOGLE_APPLICATION_CREDENTIALS"
-          gcloud --quiet auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          echo "PATH: $PATH"
+          echo "Creds file: $GOOGLE_APPLICATION_CREDENTIALS"
+          # Install gcloud non-interactively
+          if ! command -v gcloud >/dev/null 2>&1; then
+            curl -sSL https://sdk.cloud.google.com | bash >/dev/null 2>&1 || true
+            export PATH="$HOME/google-cloud-sdk/bin:$PATH"
+          fi
+          gcloud --quiet version || true
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
           gcloud config set project $(PROJECT_ID)
-          gcloud --quiet config set compute/region $(LOCATION) || true
+
+          if ! gsutil ls -b gs://$(GCS_BACKEND_BUCKET) >/dev/null 2>&1; then
+            echo "Creating bucket: $(GCS_BACKEND_BUCKET)"
+            gsutil mb -p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)
+            gsutil versioning set on gs://$(GCS_BACKEND_BUCKET)
+            echo "Bucket created and versioning enabled."
+          else
+            echo "Bucket exists; setting versioning on (idempotent)."
+            gsutil versioning set on gs://$(GCS_BACKEND_BUCKET) || true
+          fi
+
+    - task: Bash@3
+      displayName: 'Install Terraform'
+      inputs:
+        targetType: 'inline'
+        script: |
+          set -euo pipefail
+          if ! command -v terraform >/dev/null 2>&1; then
+            wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip
+            unzip -o /tmp/terraform.zip -d /usr/local/bin
+          fi
+          terraform version
+
+    - task: Bash@3
+      displayName: 'Terraform init & plan (writes plan file)'
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
+      inputs:
+        targetType: 'inline'
+        script: |
+          set -euo pipefail
+          export GCS_BACKEND_BUCKET="$(GCS_BACKEND_BUCKET)"
+          export BUCKET_PREFIX="$(BUCKET_PREFIX)"
+          export PROJECT_ID="$(PROJECT_ID)"
+          export LOCATION="$(LOCATION)"
+          export TERRAFORM_WORKING_DIR="$(TERRAFORM_WORKING_DIR)"
+
+          cd "$TERRAFORM_WORKING_DIR"
+          export TF_VAR_project_id="$PROJECT_ID"
+          export TF_VAR_region="$LOCATION"
+          export TF_VAR_reg="$LOCATION"
+          export TF_VAR_service_ACC="siddhu-service-account@fluted-factor-438905-d2.iam.gserviceaccount.com"
+          
+          echo "Backend bucket: $GCS_BACKEND_BUCKET"
+          terraform init -backend-config="bucket=$GCS_BACKEND_BUCKET" -backend-config="prefix=$BUCKET_PREFIX"
+          terraform validate
+          terraform plan -out=tfplan.binary -input=false
+          terraform show -no-color tfplan.binary > tfplan.txt
+          echo "Plan written successfully."
+
+    - publish: $(TERRAFORM_WORKING_DIR)/tfplan.binary
+      artifact: tfplan
+    - publish: $(TERRAFORM_WORKING_DIR)/tfplan.txt
+      artifact: tfplan_txt
+
+
+- stage: TerraformApply
+  displayName: 'Terraform Apply or destroy (modules)'
+  jobs:
+  - job: Apply
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DownloadSecureFile@1
+      name: download_sa_apply
+      inputs:
+        secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download plan artifact'
+      inputs:
+        artifact: tfplan
+        path: $(Build.SourcesDirectory)/$(TERRAFORM_WORKING_DIR)
+
+    - task: Bash@3
+      displayName: 'Install Terraform '
+      inputs:
+        targetType: 'inline'
+        script: |
+          set -euo pipefail
+          if ! command -v terraform >/dev/null 2>&1; then
+            wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip
+            unzip -o /tmp/terraform.zip -d /usr/local/bin
+          fi
+          terraform version
+
+    - task: Bash@3
+      displayName: 'Terraform init & apply or destroy'
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
+      inputs:
+        targetType: 'inline'
+        script: |
+          set -euo pipefail
+          cd $(TERRAFORM_WORKING_DIR)
+          export TF_VAR_project_id=$(PROJECT_ID)
+          export TF_VAR_region=$(LOCATION)
+          export TF_VAR_reg="$LOCATION"
+          terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
+
+          if [ -f tfplan.binary ]; then
+            terraform $(COMMAND) -input=false -auto-approve tfplan.binary
+          else
+            echo "tfplan.binary missing — running interactive apply (should not happen in CI)."
+            terraform $(COMMAND) -input=false -auto-approve
+          fi
+#----------------------------------------------------- second method ------------------
+
+# trigger:
+#   branches:
+#     include:
+#       - main
+
+# variables:
+#   - group: terraform-deploy
+#   - name: "TF_WORK_DIR"
+#     value : $(TERRAFORM_WORKING_DIR)
+
+# stages:
+
+# - stage: Terraform_plan
+#   displayName: 'Terraform Plan & Backend Setup'
+#   jobs:
+#   - job: plan
+#     displayName: 'Plan job'
+#     pool:
+#       vmImage: 'ubuntu-latest'
+#     steps:
+#     - task: DownloadSecureFile@1
+#       name: download_sa
+#       inputs:
+#         secureFile: $(SERVICE_ACCOUNT_SECUREFILE)
+
+#     - task: GoogleCloudSdkInstaller@0
+#       displayName: 'Install Google Cloud SDK'
+#       inputs:
+#         version: '457.0.0'
+
+#     - task: Bash@3
+#       displayName: 'Authenticate gcloud with service account'
+#       env:
+#         GOOGLE_APPLICATION_CREDENTIALS: $(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
+#       inputs:
+#         targetType: 'inline'
+#         script: |
+#           set -euo pipefail
+#           echo "Using creds: $GOOGLE_APPLICATION_CREDENTIALS"
+#           gcloud --quiet auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+#           gcloud config set project $(PROJECT_ID)
+#           gcloud --quiet config set compute/region $(LOCATION) || true
   
 
-    - task: GsutilRunner@0
-      name: CheckBucket
-      displayName: "Check if backend bucket exists"
-      inputs:
-        command: 'ls'
-        arguments:  '-b gs://$(GCS_BACKEND_BUCKET)'
-      continueOnError: true
-      condition: succeededOrFailed()
+#     - task: GsutilRunner@0
+#       name: CheckBucket
+#       displayName: "Check if backend bucket exists"
+#       inputs:
+#         command: 'ls'
+#         arguments:  '-b gs://$(GCS_BACKEND_BUCKET)'
+#       continueOnError: true
+#       condition: succeededOrFailed()
 
-    - task: GsutilRunner@0
-      name: CreateBucket
-      displayName: "Create backend bucket (only if missing)"
-      inputs:
-        command: 'mb'
-        arguments: '-p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)'
-      condition: and(succeededOrFailed(), failed())
-
-
-    - task: GsutilRunner@0
-      name: EnableVersioning
-      displayName: "Enable bucket versioning (idempotent)"
-      inputs:
-        command: 'versioning'
-        arguments: 'set on gs://$(GCS_BACKEND_BUCKET)'
-
-    - task: TerraformInstaller@1
-      inputs:
-        terraformVersion: 'latest'
+#     - task: GsutilRunner@0
+#       name: CreateBucket
+#       displayName: "Create backend bucket (only if missing)"
+#       inputs:
+#         command: 'mb'
+#         arguments: '-p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BACKEND_BUCKET)'
+#       condition: and(succeededOrFailed(), failed())
 
 
-    - script: |
-        echo "Initializing Terraform with GCS backend..."
-        terraform init -migrate-state \
-          -backend-config=bucket=$(GCS_BACKEND_BUCKET) \
-          -backend-config=prefix=$(BUCKET_PREFIX) \
-          -backend-config=credentials=$(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
-      displayName: 'Terraform Init'
-      workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+#     - task: GsutilRunner@0
+#       name: EnableVersioning
+#       displayName: "Enable bucket versioning (idempotent)"
+#       inputs:
+#         command: 'versioning'
+#         arguments: 'set on gs://$(GCS_BACKEND_BUCKET)'
+
+#     - task: TerraformInstaller@1
+#       inputs:
+#         terraformVersion: 'latest'
 
 
-    - task: TerraformTask@5
-      name: TFValidate
-      displayName: "Terraform Validate"
-      inputs:
-        provider: 'gcp'
-        command: 'validate'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-
-    - task: TerraformTask@5
-      name: TFPlan
-      displayName: "Terraform Plan (output binary plan)"
-      inputs:
-        provider: 'gcp'
-        command: 'plan'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: >
-          -out=tfplan.binary 
-          -input=false
-          -var=project_id='$(PROJECT_ID)'
-          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
-          -var=reg='$(REGION)'
-          -var=region="$(LOCATION)"
-
-    - script: |
-        terraform show -no-color tfplan.binary > tfplan.txt
-        cat tfplan.txt
-      displayName: 'Terraform Show → tfplan.txt'
-      workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-
-    - publish: '$(TERRAFORM_WORKING_DIR)/tfplan.txt'
-      artifact: terraform-plan-text
+#     - script: |
+#         echo "Initializing Terraform with GCS backend..."
+#         terraform init -migrate-state \
+#           -backend-config=bucket=$(GCS_BACKEND_BUCKET) \
+#           -backend-config=prefix=$(BUCKET_PREFIX) \
+#           -backend-config=credentials=$(Agent.TempDirectory)/$(SERVICE_ACCOUNT_SECUREFILE)
+#       displayName: 'Terraform Init'
+#       workingDirectory: '$(TERRAFORM_WORKING_DIR)'
 
 
+#     - task: TerraformTask@5
+#       name: TFValidate
+#       displayName: "Terraform Validate"
+#       inputs:
+#         provider: 'gcp'
+#         command: 'validate'
+#         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
 
-    - task: TerraformTask@5
-      name: TFApply
-      displayName: "Terraform Apply"
-      inputs:
-        provider: 'gcp'
-        command: 'apply'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: >
-          -auto-approve 
-          -input=false
-          -var=project_id='$(PROJECT_ID)'
-          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
-          -var=reg='$(REGION)'
-          -var=region="$(LOCATION)"
+#     - task: TerraformTask@5
+#       name: TFPlan
+#       displayName: "Terraform Plan (output binary plan)"
+#       inputs:
+#         provider: 'gcp'
+#         command: 'plan'
+#         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+#         environmentServiceNameGCP: 'GCP-tf-service-acc'
+#         commandOptions: >
+#           -out=tfplan.binary 
+#           -input=false
+#           -var=project_id='$(PROJECT_ID)'
+#           -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+#           -var=reg='$(REGION)'
+#           -var=region="$(LOCATION)"
 
-    - task: TerraformTask@5
-      name: TFDestroy
-      displayName: "Terraform Destroy"
-      inputs:
-        provider: 'gcp'
-        command: 'destroy'
-        workingDirectory: '$(TERRAFORM_WORKING_DIR)'
-        environmentServiceNameGCP: 'GCP-tf-service-acc'
-        commandOptions: >
-          -auto-approve 
-          -input=false
-          -var=project_id='$(PROJECT_ID)'
-          -var=service_ACC='$(SERVICE_ACC_EMAIL)'
-          -var=reg='$(REGION)'
-          -var=region="$(LOCATION)"
-      condition: failed()
+#     - script: |
+#         terraform show -no-color tfplan.binary > tfplan.txt
+#         cat tfplan.txt
+#       displayName: 'Terraform Show → tfplan.txt'
+#       workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+
+#     - publish: '$(TERRAFORM_WORKING_DIR)/tfplan.txt'
+#       artifact: terraform-plan-text
+
+
+
+#     - task: TerraformTask@5
+#       name: TFApply
+#       displayName: "Terraform Apply"
+#       inputs:
+#         provider: 'gcp'
+#         command: 'apply'
+#         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+#         environmentServiceNameGCP: 'GCP-tf-service-acc'
+#         commandOptions: >
+#           -auto-approve 
+#           -input=false
+#           -var=project_id='$(PROJECT_ID)'
+#           -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+#           -var=reg='$(REGION)'
+#           -var=region="$(LOCATION)"
+
+#     - task: TerraformTask@5
+#       name: TFDestroy
+#       displayName: "Terraform Destroy"
+#       inputs:
+#         provider: 'gcp'
+#         command: 'destroy'
+#         workingDirectory: '$(TERRAFORM_WORKING_DIR)'
+#         environmentServiceNameGCP: 'GCP-tf-service-acc'
+#         commandOptions: >
+#           -auto-approve 
+#           -input=false
+#           -var=project_id='$(PROJECT_ID)'
+#           -var=service_ACC='$(SERVICE_ACC_EMAIL)'
+#           -var=reg='$(REGION)'
+#           -var=region="$(LOCATION)"
+#       condition: failed()
