@@ -80,6 +80,7 @@ stages:
           cd "$TERRAFORM_WORKING_DIR"
           export TF_VAR_project_id="$PROJECT_ID"
           export TF_VAR_region="$LOCATION"
+          export TF_VAR_reg="$LOCATION"
           
           echo "Backend bucket: $GCS_BACKEND_BUCKET"
           terraform init -backend-config="bucket=$GCS_BACKEND_BUCKET" -backend-config="prefix=$BUCKET_PREFIX"
@@ -135,6 +136,7 @@ stages:
           cd $(TERRAFORM_WORKING_DIR)
           export TF_VAR_project_id=$(PROJECT_ID)
           export TF_VAR_region=$(LOCATION)
+          export TF_VAR_reg="$LOCATION"
           terraform init -backend-config="bucket=$(GCS_BACKEND_BUCKET)" -backend-config="prefix=$(BUCKET_PREFIX)"
 
           if [ -f tfplan.binary ]; then
